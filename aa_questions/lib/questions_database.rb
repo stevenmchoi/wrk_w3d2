@@ -56,6 +56,38 @@ class Question
     @body = options['body']
     @user_id = options['user_id']
   end
+
+  def self.find_by_user_id(user_id)
+    data = QuestionsDatabase.instance.execute(<<-SQL, user_id)
+      SELECT
+        *
+      FROM
+        questions
+      WHERE
+        user_id = ?
+    SQL
+
+    data.map { |datum| Question.new(datum) }
+  end
+
+  def author
+    QuestionsDatabase.instance.execute(<<-SQL, @user_id)
+      SELECT
+        users.fname, users.lname
+      FROM
+        questions
+      JOIN
+        question_follows
+      ON
+        question_follows.question_id = questions.id
+      JOIN
+        users
+      ON
+        users.id = question_follows.user_id
+      WHERE
+        users.id = ?
+    SQL
+  end
 end
 
 class QuestionFollows
@@ -83,6 +115,7 @@ end
 
 class Replies
   attr_accessor :parent_reply_id, :question_id, :user_id, :body
+
   def self.find_by_id(id)
     data = QuestionsDatabase.instance.execute(<<-SQL, id)
       SELECT
