@@ -111,6 +111,7 @@ class Question
   end
 
   def replies
+    Reply.find_by_question_id(@id)
   end
 end
 
