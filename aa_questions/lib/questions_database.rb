@@ -88,6 +88,9 @@ class Question
         users.id = ?
     SQL
   end
+
+  def replies
+  end
 end
 
 class QuestionFollows
@@ -113,7 +116,7 @@ class QuestionFollows
   end
 end
 
-class Replies
+class Reply
   attr_accessor :parent_reply_id, :question_id, :user_id, :body
 
   def self.find_by_id(id)
@@ -126,7 +129,7 @@ class Replies
         id = ?
     SQL
 
-    data.map { |datum| Replies.new(datum) }
+    data.map { |datum| Reply.new(datum) }
   end
 
   def initialize(options)
@@ -135,6 +138,19 @@ class Replies
     @question_id = options['question_id']
     @user_id = options['user_id']
     @body = options['body']
+  end
+
+  def self.find_by_user_id(user_id)
+    data = QuestionsDatabase.instance.execute(<<-SQL, user_id)
+      SELECT
+        *
+      FROM
+        replies
+      WHERE
+        user_id = ?
+    SQL
+
+    data.map { |datum| Reply.new(datum) }
   end
 end
 
