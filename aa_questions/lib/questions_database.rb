@@ -152,6 +152,49 @@ class Reply
 
     data.map { |datum| Reply.new(datum) }
   end
+
+  def self.find_by_question_id(question_id)
+    data = QuestionsDatabase.instance.execute(<<-SQL, question_id)
+      SELECT
+        *
+      FROM
+        replies
+      WHERE
+        question_id = ?
+    SQL
+
+    data.map { |datum| Reply.new(datum) }
+  end
+
+  def author
+    QuestionsDatabase.instance.execute(<<-SQL, @user_id)
+      SELECT
+        users.fname, users.lname
+      FROM
+        users
+      WHERE
+        users.id = ?
+    SQL
+  end
+
+  def question
+    QuestionsDatabase.instance.execute(<<-SQL, @question_id)
+      SELECT
+        *
+      FROM
+        questions
+      WHERE
+        questions.id = ?
+    SQL
+  end
+
+  def parent_reply
+
+  end
+
+  def child_replies
+
+  end
 end
 
 class QuestionLikes
