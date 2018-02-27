@@ -189,11 +189,28 @@ class Reply
   end
 
   def parent_reply
+    # QUESTION: why all @ivars?
+    raise "#{self} doesn't have parent reply!" unless @parent_reply_id
 
+    QuestionsDatabase.instance.execute(<<-SQL, @parent_reply_id)
+      SELECT
+        *
+      FROM
+        replies
+      WHERE
+        replies.id = ?
+    SQL
   end
 
   def child_replies
-
+    QuestionsDatabase.instance.execute(<<-SQL, @id)
+      SELECT
+        *
+      FROM
+        replies
+      WHERE
+        replies.parent_reply_id = ?
+    SQL
   end
 end
 
