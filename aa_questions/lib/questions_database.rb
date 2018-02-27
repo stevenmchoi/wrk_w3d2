@@ -53,6 +53,10 @@ class User
   def authored_replies
     Reply.find_by_user_id(@id)
   end
+
+  def followed_questions
+    QuestionFollow.followed_questions_for_user_id(@id)
+  end
 end
 
 class Question
@@ -98,13 +102,9 @@ class Question
       FROM
         questions
       JOIN
-        question_follows
-      ON
-        question_follows.question_id = questions.id
-      JOIN
         users
       ON
-        users.id = question_follows.user_id
+        users.id = questions.user_id
       WHERE
         users.id = ?
     SQL
@@ -113,9 +113,13 @@ class Question
   def replies
     Reply.find_by_question_id(@id)
   end
+
+  def followers
+    QuestionFollow.followers_for_question_id(@id)
+  end
 end
 
-class QuestionFollows
+class QuestionFollow
   attr_accessor :user_id, :question_id
 
   def self.find_by_id(id)
@@ -128,7 +132,7 @@ class QuestionFollows
         id = ?
     SQL
 
-    data.map { |datum| QuestionFollows.new(datum) }
+    data.map { |datum| QuestionFollow.new(datum) }
   end
 
   def initialize(options)
@@ -136,8 +140,43 @@ class QuestionFollows
     @user_id = options['user_id']
     @question_id = options['question_id']
   end
+
+  def self.followers_for_question_id(question_id)
+    data = QuestionsDatabase.instance.execute(<<-SQL, question_id)
+      SELECT
+        *
+      FROM
+        users
+      JOIN
+        questions
+      ON
+        questions.user_id = users.id
+      WHERE
+        questions.id = ?
+    SQL
+
+    data.map { |datum| User.new(datum) }
+  end
+
+  def self.followed_questions_for_user_id(user_id)
+    data = QuestionsDatabase.instance.execute(<<-SQL, user_id)
+      SELECT
+        *
+      FROM
+        questions
+      JOIN
+        users
+      ON
+        questions.user_id = users.id
+      WHERE
+        users.id = ?
+    SQL
+
+    data.map { |datum| Question.new(datum) }
+  end
 end
 
+# QUESTION: why all @ivars?
 class Reply
   attr_accessor :parent_reply_id, :question_id, :user_id, :body
 
@@ -211,7 +250,6 @@ class Reply
   end
 
   def parent_reply
-    # QUESTION: why all @ivars?
     raise "#{self} doesn't have parent reply!" unless @parent_reply_id
 
     QuestionsDatabase.instance.execute(<<-SQL, @parent_reply_id)
