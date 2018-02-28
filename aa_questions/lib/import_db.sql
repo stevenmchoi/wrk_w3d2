@@ -55,13 +55,24 @@ INSERT INTO
   questions (title, body, user_id)
 VALUES
   ('CSS hard!', 'how do I do this?', 1),
-  ('SQL hard!', 'waht iz squl?', 2);
+  ('SQL hard!', 'waht iz squl?', 2),
+  ('halkdjf', 'lkajdflkaj', 1),
+  ('SQL fdahard!', 'wadfht iz squl?', 2),
+  ('halkddfafdsajf', 'lkajdfdflkaj', 1),
+  ('halkddfafdsajf', 'lkajdfdflkaj', 1);
 
 INSERT INTO
   question_follows (user_id, question_id)
 VALUES
   (1, 1),
-  (2, 2);
+  (2, 2),
+  (1, 3),
+  (1, 4),
+  (1, 5),
+  (2, 3),
+  (2, 4),
+  (2, 5);
+
 
 INSERT INTO
   replies (parent_reply_id, question_id, user_id, body)
