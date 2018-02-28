@@ -63,6 +63,21 @@ class User
   end
 
   def average_karma
+    QuestionsDatabase.instance.execute(<<-SQL, @id)
+      SELECT
+        COUNT(*).fdiv(COUNT(questions.id))
+      FROM
+        question_likes
+      JOIN
+        questions
+      ON
+        question_likes.question_id = questions.id
+      WHERE
+        question_likes.user_like = 1 AND
+        questions.user_id = 1;
+      -- GROUP BY
+      --   question_likes.question_id;
+    SQL
   end
 end
 
