@@ -57,6 +57,10 @@ class User
   def followed_questions
     QuestionFollow.followed_questions_for_user_id(@id)
   end
+
+  def liked_questions
+    QuestionLike.liked_questions_for_user_id(@id)
+  end
 end
 
 class Question
@@ -93,6 +97,14 @@ class Question
     SQL
 
     data.map { |datum| Question.new(datum) }
+  end
+
+  def likers
+    QuestionLike.likers_for_question_id(@id)
+  end
+
+  def num_likes
+    QuestionLike.num_likes_for_question_id(@id)
   end
 
   def author
