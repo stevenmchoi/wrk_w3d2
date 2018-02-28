@@ -61,6 +61,9 @@ class User
   def liked_questions
     QuestionLike.liked_questions_for_user_id(@id)
   end
+
+  def average_karma
+  end
 end
 
 class Question
@@ -132,6 +135,10 @@ class Question
 
   def self.most_followed(n)
     QuestionFollow.most_followed_questions(n)
+  end
+
+  def self.most_liked(n)
+    QuestionLike.most_liked_questions(n)
   end
 end
 
@@ -379,6 +386,30 @@ class QuestionLike
       WHERE
         question_likes.user_id = ? AND
         question_likes.user_like = 1
+    SQL
+
+    data.map { |datum| Question.new(datum) }
+  end
+
+  def self.most_liked_questions(n)
+    data = QuestionsDatabase.instance.execute(<<-SQL, n)
+      SELECT
+        questions.*,
+        COUNT(question_likes.id) AS num_likes
+      FROM
+        questions
+      JOIN
+        question_likes
+      ON
+        questions.id = question_likes.question_id
+      WHERE
+        question_likes.user_like = 1
+      GROUP BY
+        questions.id
+      ORDER BY
+        num_likes DESC
+      LIMIT
+        ?
     SQL
 
     data.map { |datum| Question.new(datum) }
