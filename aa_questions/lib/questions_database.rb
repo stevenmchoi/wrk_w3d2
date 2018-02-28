@@ -117,6 +117,10 @@ class Question
   def followers
     QuestionFollow.followers_for_question_id(@id)
   end
+
+  def self.most_followed(n)
+    QuestionFollow.most_followed_questions(n)
+  end
 end
 
 class QuestionFollow
@@ -174,9 +178,31 @@ class QuestionFollow
 
     data.map { |datum| Question.new(datum) }
   end
+
+  def self.most_followed_questions(n)
+    data = QuestionsDatabase.instance.execute(<<-SQL, n)
+      SELECT
+        questions.id,
+        questions.title,
+        COUNT(question_follows.user_id)
+      FROM
+        questions
+      JOIN
+        question_follows
+      ON
+        questions.id = question_follows.question_id
+      GROUP BY
+        questions.id
+      ORDER BY
+        COUNT(question_follows.user_id) DESC
+      LIMIT
+        ?
+    SQL
+
+    data.map { |datum| Question.new(datum) }
+  end
 end
 
-# QUESTION: why all @ivars?
 class Reply
   attr_accessor :parent_reply_id, :question_id, :user_id, :body
 
