@@ -17,7 +17,7 @@ class User
   def self.find_by_id(id)
     data = QuestionsDatabase.instance.execute(<<-SQL, id)
       SELECT
-        *
+        users.*
       FROM
         users
       WHERE
@@ -36,7 +36,7 @@ class User
   def self.find_by_name(fname, lname)
     data = QuestionsDatabase.instance.execute(<<-SQL, fname, lname)
       SELECT
-        *
+        users.*
       FROM
         users
       WHERE
@@ -65,7 +65,7 @@ class Question
   def self.find_by_id(id)
     data = QuestionsDatabase.instance.execute(<<-SQL, id)
       SELECT
-        *
+        questions.*
       FROM
         questions
       WHERE
@@ -85,7 +85,7 @@ class Question
   def self.find_by_user_id(user_id)
     data = QuestionsDatabase.instance.execute(<<-SQL, user_id)
       SELECT
-        *
+        questions.*
       FROM
         questions
       WHERE
@@ -129,7 +129,7 @@ class QuestionFollow
   def self.find_by_id(id)
     data = QuestionsDatabase.instance.execute(<<-SQL, id)
       SELECT
-        *
+        question_follows.*
       FROM
         question_follows
       WHERE
@@ -148,7 +148,7 @@ class QuestionFollow
   def self.followers_for_question_id(question_id)
     data = QuestionsDatabase.instance.execute(<<-SQL, question_id)
       SELECT
-        *
+        users.*
       FROM
         users
       JOIN
@@ -165,7 +165,7 @@ class QuestionFollow
   def self.followed_questions_for_user_id(user_id)
     data = QuestionsDatabase.instance.execute(<<-SQL, user_id)
       SELECT
-        *
+        questions.*
       FROM
         questions
       JOIN
@@ -209,7 +209,7 @@ class Reply
   def self.find_by_id(id)
     data = QuestionsDatabase.instance.execute(<<-SQL, id)
       SELECT
-        *
+        replies.*
       FROM
         replies
       WHERE
@@ -230,7 +230,7 @@ class Reply
   def self.find_by_user_id(user_id)
     data = QuestionsDatabase.instance.execute(<<-SQL, user_id)
       SELECT
-        *
+        replies.*
       FROM
         replies
       WHERE
@@ -243,7 +243,7 @@ class Reply
   def self.find_by_question_id(question_id)
     data = QuestionsDatabase.instance.execute(<<-SQL, question_id)
       SELECT
-        *
+        replies.*
       FROM
         replies
       WHERE
@@ -300,20 +300,20 @@ class Reply
   end
 end
 
-class QuestionLikes
+class QuestionLike
   attr_accessor :user_id, :question_id, :user_like
 
   def self.find_by_id(id)
     data = QuestionsDatabase.instance.execute(<<-SQL, id)
       SELECT
-        *
+        question_likes.*
       FROM
         question_likes
       WHERE
         id = ?
     SQL
 
-    data.map { |datum| QuestionLikes.new(datum) }
+    data.map { |datum| QuestionLike.new(datum) }
   end
 
   def initialize(options)
@@ -323,4 +323,52 @@ class QuestionLikes
     @user_like = options['user_like']
   end
 
+  def self.likers_for_question_id(question_id)
+    data = QuestionsDatabase.instance.execute(<<-SQL, question_id)
+      SELECT
+        users.*
+      FROM
+        users
+      JOIN
+        question_likes
+      ON
+        question_likes.user_id = users.id
+      WHERE
+        question_likes.user_like = 1 AND
+        question_likes.question_id = ?
+    SQL
+
+    data.map { |datum| User.new(datum) }
+  end
+
+  def self.num_likes_for_question_id(question_id)
+    QuestionsDatabase.instance.execute(<<-SQL, question_id)
+      SELECT
+        COUNT(*)
+      FROM
+        question_likes
+      WHERE
+        question_likes.question_id = ? AND
+        question_likes.user_like = 1
+    SQL
+
+  end
+
+  def self.liked_questions_for_user_id(user_id)
+    data = QuestionsDatabase.instance.execute(<<-SQL, user_id)
+      SELECT
+        questions.*
+      FROM
+        questions
+      JOIN
+        question_likes
+      ON
+        question_likes.question_id = questions.id
+      WHERE
+        question_likes.user_id = ? AND
+        question_likes.user_like = 1
+    SQL
+
+    data.map { |datum| Question.new(datum) }
+  end
 end
