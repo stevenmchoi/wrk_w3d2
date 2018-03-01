@@ -65,7 +65,7 @@ class User
   def average_karma
     QuestionsDatabase.instance.execute(<<-SQL, @id)
       SELECT
-        COUNT(*).fdiv(COUNT(questions.id))
+        CAST(COUNT(*) AS FLOAT) / COUNT(questions.id)
       FROM
         question_likes
       JOIN
@@ -77,6 +77,17 @@ class User
         questions.user_id = 1;
       -- GROUP BY
       --   question_likes.question_id;
+      -- SELECT
+      --   CAST(COUNT(question_likes.id) AS FLOAT) /
+      --     COUNT(DISTINCT(questions.id)) AS avg_karma
+      -- FROM
+      --   questions
+      -- LEFT OUTER JOIN
+      --   question_likes
+      -- ON
+      --   questions.id = question_likes.question_id
+      -- WHERE
+      --   questions.author_id = :author_id
     SQL
   end
 end
